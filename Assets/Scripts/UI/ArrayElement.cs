@@ -29,6 +29,12 @@ public class ArrayElement : MonoBehaviour {
             image.color = defaultColor;
     }
 
+    public void Fade(bool fade) {
+        Color color = image.color;
+        color.a = fade ? 0.5f : 1f;
+        image.color = color;
+    }
+
     public void Swapping(bool value) {
         if (value)
             image.color = swappingColor;

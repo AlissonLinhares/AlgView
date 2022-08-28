@@ -3,31 +3,46 @@ using System.Collections.Generic;
 using UnityEngine;
 
 public class BogoSort : Algorithm {
+    private ArrayElement[] data = new ArrayElement[0];
+
+    public override void Init(int[] dataset) {
+        foreach (var e in data)
+            Destroy(e.gameObject);
+
+        int size = dataset.Length;
+        data = new ArrayElement[size];
+
+        for (int i = 0; i < size; i++) {
+            data[i] = Instantiate(elementPrefab, this.transform).GetComponent<ArrayElement>();
+            data[i].Value = dataset[i];
+        }
+    }
+
     protected override IEnumerator _Run() {
-        int size = elements.Length;
+        int size = data.Length;
         while (!IsSorted())
             yield return Shuffle();
 
         for (int i = 0; i < size; i++)
-            elements[i].MarkAsSorted();
+            data[i].MarkAsSorted();
     }
 
     private bool IsSorted() {
-        int size = elements.Length;
+        int size = data.Length;
         for (int i = 0; i < size - 1; i++) {
-            if (elements[i].Value > elements[i + 1].Value)
+            if (data[i].Value > data[i + 1].Value)
                 return false;
         }
 
-        return false;
+        return true;
     }
 
     private IEnumerator Shuffle() {
-        int size = elements.Length;
+        int size = data.Length;
         int i = Random.Range(0, size);
         int j = Random.Range(0, size);
-        yield return _Swap(elements[i], elements[j]);
-        elements[i].Select(false);
-        elements[j].Select(false);
+        yield return _Swap(data[i], data[j]);
+        data[i].Select(false);
+        data[j].Select(false);
     }
 }

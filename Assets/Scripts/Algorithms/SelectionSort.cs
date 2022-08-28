@@ -3,16 +3,31 @@ using System.Collections.Generic;
 using UnityEngine;
 
 public class SelectionSort : Algorithm {
+    private ArrayElement[] data = new ArrayElement[0];
+
+    public override void Init(int[] dataset) {
+        foreach (var e in data)
+            Destroy(e.gameObject);
+
+        int size = dataset.Length;
+        data = new ArrayElement[size];
+
+        for (int i = 0; i < size; i++) {
+            data[i] = Instantiate(elementPrefab, this.transform).GetComponent<ArrayElement>();
+            data[i].Value = dataset[i];
+        }
+    }
+
     protected override IEnumerator _Run() {
-        int size = elements.Length;
+        int size = data.Length;
         for (int i = 0; i < size; i++) {
             int min = i;
 
             for (int j = i + 1; j < size; j++) {
-                ArrayElement a = elements[min];
+                ArrayElement a = data[min];
                 a.Select(true);
 
-                ArrayElement b = elements[j];
+                ArrayElement b = data[j];
                 b.Select(true);
                 yield return _WaitStep();
 
@@ -26,12 +41,12 @@ public class SelectionSort : Algorithm {
             }
 
             if (i != min)
-                yield return _Swap(elements[min], elements[i]);
+                yield return _Swap(data[min], data[i]);
 
-            elements[min].Select(false);
-            elements[i].Select(false);
+            data[min].Select(false);
+            data[i].Select(false);
 
-            elements[i].MarkAsSorted();
+            data[i].MarkAsSorted();
         }
     }
 }

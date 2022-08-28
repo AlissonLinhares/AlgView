@@ -2,9 +2,8 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-public class Algorithm : MonoBehaviour {
+public abstract class Algorithm : MonoBehaviour {
     [SerializeField] protected GameObject elementPrefab;
-    protected ArrayElement[] elements = new ArrayElement[0];
     protected RectTransform srcObj = null;
     protected RectTransform tgtObj = null;
 
@@ -14,18 +13,7 @@ public class Algorithm : MonoBehaviour {
     public bool Paused {get; set;}
     public bool Running {get; set;}
 
-    public virtual void Init(int[] dataset) {
-        foreach (var e in elements)
-            Destroy(e.gameObject);
-
-        int size = dataset.Length;
-        elements = new ArrayElement[size];
-
-        for (int i = 0; i < size; i++) {
-            elements[i] = Instantiate(elementPrefab, this.transform).GetComponent<ArrayElement>();
-            elements[i].Value = dataset[i];
-        }
-    }
+    public abstract void Init(int[] dataset);
 
     public void Step() {
         if (Running)
@@ -54,7 +42,7 @@ public class Algorithm : MonoBehaviour {
         Paused = false;
     }
 
-    public void Clear() {
+    public virtual void Clear() {
         StopAllCoroutines();
 
         if (tgtObj != null)
@@ -82,6 +70,44 @@ public class Algorithm : MonoBehaviour {
         }
 
         CurrStep++;
+    }
+
+    protected IEnumerator _Move(ArrayElement eSrc, ArrayElement eTgt) {
+        eSrc.Swapping(true);
+        eTgt.Swapping(true);
+        yield return _WaitStep();
+
+        RectTransform a = eSrc.Label;
+        a.SetParent(this.transform.parent.parent, true);
+        srcObj = a;
+        Vector3 src = a.position;
+        Vector3 tgt = eTgt.Label.position;
+
+        while (true) {
+            a.position = Vector3.MoveTowards(a.position, tgt, Time.deltaTime * Speed);
+            yield return null;
+
+            float dist = Vector3.Distance(tgt, a.position);
+            if (dist < 0.001f || NextStep > CurrStep)
+                break;
+        }
+
+        a.SetParent(eSrc.transform, false);
+        a.offsetMin = Vector3.zero;
+        a.offsetMax = Vector3.zero;
+
+        eTgt.Value = eSrc.Value;
+
+        eSrc.Select(false);
+        eTgt.Select(false);
+
+        srcObj = null;
+        yield return _WaitStep();
+    }
+
+    protected IEnumerator _Copy(ArrayElement[] src, ArrayElement[] dst) {
+        for (int i = 0; i < src.Length; i++)
+            yield return _Move(src[i], dst[i]);
     }
 
     protected IEnumerator _Swap(ArrayElement eSrc, ArrayElement eTgt) {
@@ -129,30 +155,5 @@ public class Algorithm : MonoBehaviour {
         yield return _WaitStep();
     }
 
-    protected virtual IEnumerator _Run() {
-        int size = elements.Length;
-        for (int i = 1; i < size; ++i) {
-            for (int j = 0; j < size - i; ++j) {
-                ArrayElement a = elements[j];
-                ArrayElement b = elements[j + 1];
-
-                a.Select(true);
-                b.Select(true);
-                yield return _WaitStep();
-
-                if (a.Value > b.Value)
-                    yield return _Swap(a, b);
-
-                a.Select(false);
-                b.Select(false);
-
-                if (!Running)
-                    yield break;
-            }
-
-            elements[size - i].MarkAsSorted();
-        }
-
-        elements[0].MarkAsSorted();
-    }
+    protected abstract IEnumerator _Run();
 }
