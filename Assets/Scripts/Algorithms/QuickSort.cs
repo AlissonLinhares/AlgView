@@ -20,8 +20,12 @@ public class QuickSort : Algorithm {
     }
 
     private IEnumerator Sort(int begin, int end) {
-        if (begin >= end)
+        if (begin == end) {
+            data[begin].MarkAsSorted();
             yield break;
+        } else if (begin > end) {
+            yield break;
+        }
 
         Fade(0, data.Length-1, true);
         Fade(begin, end, false);
@@ -63,7 +67,7 @@ public class QuickSort : Algorithm {
         data[pivot].Select(false);
 
         yield return _WaitStep();
-        data[firstBigger].Select(false);
+        data[firstBigger].MarkAsSorted();
 
         yield return Sort(begin, firstBigger - 1);
         yield return Sort(firstBigger + 1, end);
