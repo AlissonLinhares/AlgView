@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 
 public class InsertionSort : Algorithm {
-    private ArrayElement[] data = new ArrayElement[0];
+    protected ArrayElement[] data = new ArrayElement[0];
 
     public override void Init(int[] dataset) {
         foreach (var e in data)
